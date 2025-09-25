@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="音箱功放搭配计算器 - 帮助您计算最佳的音箱和功放搭配方案，获得理想的音质效果">
+    <meta name="keywords" content="音箱,功放,搭配,计算器,声压级,SPL,功率匹配,阻抗匹配">
+    <title>音箱功放搭配计算器</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- 访问统计脚本 -->
+    <script src="https://cdn.jsdelivr.net/npm/countapi-js@1.0.2/dist/countapi-js.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>音箱功放搭配计算器</h1>
+            <p>根据您的音箱参数、房间信息和功放参数，计算最佳搭配方案和预期音效</p>
+        </header>
+
+        <main>
+            <section class="calculator-section">
+                <div class="input-form">
+                    <h2>输入参数</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <h3>音箱参数</h3>
+                            <label for="sensitivity">音箱灵敏度 (dB/1W/1m):</label>
+                            <input type="number" id="sensitivity" min="80" max="110" step="0.5" value="88">
+                            
+                            <label for="impedance">音箱阻抗 (Ω):</label>
+                            <select id="impedance">
+                                <option value="4">4Ω</option>
+                                <option value="6">6Ω</option>
+                                <option value="8" selected>8Ω</option>
+                                <option value="16">16Ω</option>
+                            </select>
+                            
+                            <label for="speaker_min_power">音箱最小功率 (W):</label>
+                            <input type="number" id="speaker_min_power" min="1" max="1000" step="1" value="20">
+                            
+                            <label for="speaker_max_power">音箱最大功率 (W):</label>
+                            <input type="number" id="speaker_max_power" min="10" max="5000" step="1" value="100">
+                        </div>
+
+                        <div class="form-group">
+                            <h3>房间参数</h3>
+                            <label for="distance">听音距离 (m):</label>
+                            <input type="number" id="distance" min="1" max="10" step="0.1" value="3">
+                            
+                            <label for="room_size">房间面积 (㎡):</label>
+                            <input type="number" id="room_size" min="10" max="500" step="1" value="30">
+                            
+                            <label for="room_type">房间类型:</label>
+                            <select id="room_type">
+                                <option value="small" selected>小型房间 (≤20㎡)</option>
+                                <option value="medium">中型房间 (21-40㎡)</option>
+                                <option value="large">大型房间 (41-80㎡)</option>
+                                <option value="hall">厅堂 (>80㎡)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <h3>功放参数</h3>
+                            <label for="amp_impedance">功放阻抗 (Ω):</label>
+                            <select id="amp_impedance">
+                                <option value="4">4Ω</option>
+                                <option value="6">6Ω</option>
+                                <option value="8" selected>8Ω</option>
+                            </select>
+                            
+                            <label for="amp_power">功放功率 (W):</label>
+                            <input type="number" id="amp_power" min="10" max="3000" step="1" value="80">
+                        </div>
+                    </div>
+
+                    <button id="calculate-btn" class="calculate-button">计算搭配方案</button>
+                </div>
+
+                <div class="results-section">
+                    <h2>计算结果</h2>
+                    <div id="results" class="results-content">
+                        <div class="result-item">
+                            <h3>预期最大声压级 (SPL):</h3>
+                            <p id="spl-result">-- dB</p>
+                        </div>
+                        <div class="result-item">
+                            <h3>功率匹配度:</h3>
+                            <p id="power-match-result">--</p>
+                        </div>
+                        <div class="result-item">
+                            <h3>阻抗匹配度:</h3>
+                            <p id="impedance-match-result">--</p>
+                        </div>
+                        <div class="result-item">
+                            <h3>房间适配度:</h3>
+                            <p id="room-match-result">--</p>
+                        </div>
+                        <div class="result-item full-width">
+                            <h3>综合评估:</h3>
+                            <p id="overall-result">请点击计算按钮获取结果</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="reference-chart">
+                <h2>参考图表</h2>
+                <div class="charts-container">
+                    <div class="chart">
+                        <h3>3米听音距离推荐功率</h3>
+                        <div class="chart-content" id="chart-3m"></div>
+                    </div>
+                    <div class="chart">
+                        <h3>3.5米听音距离推荐功率</h3>
+                        <div class="chart-content" id="chart-3_5m"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <h2>搭配指南</h2>
+                <div class="info-content">
+                    <p><strong>音箱灵敏度</strong>: 表示音箱在输入1W功率、距离1米处产生的声压级。灵敏度越高，相同功率下声音越大。</p>
+                    <p><strong>阻抗匹配</strong>: 功放的输出阻抗应与音箱的输入阻抗匹配或兼容，否则可能影响音质和设备安全。</p>
+                    <p><strong>功率匹配</strong>: 功放功率应在音箱的最小和最大功率之间，通常建议为音箱额定功率的1-2倍。</p>
+                    <p><strong>房间因素</strong>: 房间大小和吸音特性会影响实际听音效果，大房间需要更大功率的功放。</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 音箱功放搭配计算器 | 仅供参考，实际效果可能因环境和设备差异而有所不同</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

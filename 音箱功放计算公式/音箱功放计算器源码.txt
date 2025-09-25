@@ -1,0 +1,665 @@
+/* 音箱功放搭配计算器 源码文件 */
+
+/* ===== HTML 结构 ===== */
+/*
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="音箱功放搭配计算器 - 帮助您计算最佳的音箱和功放搭配方案，获得理想的音质效果">
+    <meta name="keywords" content="音箱,功放,搭配,计算器,声压级,SPL,功率匹配,阻抗匹配">
+    <title>音箱功放搭配计算器</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- 访问统计脚本 -->
+    <script src="https://cdn.jsdelivr.net/npm/countapi-js@1.0.2/dist/countapi-js.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>音箱功放搭配计算器</h1>
+            <p>根据您的音箱参数、房间信息和功放参数，计算最佳搭配方案和预期音效</p>
+        </header>
+
+        <main>
+            <section class="calculator-section">
+                <div class="input-form">
+                    <h2>输入参数</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <h3>音箱参数</h3>
+                            <label for="sensitivity">音箱灵敏度 (dB/1W/1m):</label>
+                            <input type="number" id="sensitivity" min="80" max="110" step="0.5" value="88">
+                            
+                            <label for="impedance">音箱阻抗 (Ω):</label>
+                            <select id="impedance">
+                                <option value="4">4Ω</option>
+                                <option value="6">6Ω</option>
+                                <option value="8" selected>8Ω</option>
+                                <option value="16">16Ω</option>
+                            </select>
+                            
+                            <label for="speaker_min_power">音箱最小功率 (W):</label>
+                            <input type="number" id="speaker_min_power" min="1" max="1000" step="1" value="20">
+                            
+                            <label for="speaker_max_power">音箱最大功率 (W):</label>
+                            <input type="number" id="speaker_max_power" min="10" max="5000" step="1" value="100">
+                        </div>
+
+                        <div class="form-group">
+                            <h3>房间参数</h3>
+                            <label for="distance">听音距离 (m):</label>
+                            <input type="number" id="distance" min="1" max="10" step="0.1" value="3">
+                            
+                            <label for="room_size">房间面积 (㎡):</label>
+                            <input type="number" id="room_size" min="10" max="500" step="1" value="30">
+                            
+                            <label for="room_type">房间类型:</label>
+                            <select id="room_type">
+                                <option value="small" selected>小型房间 (≤20㎡)</option>
+                                <option value="medium">中型房间 (21-40㎡)</option>
+                                <option value="large">大型房间 (41-80㎡)</option>
+                                <option value="hall">厅堂 (>80㎡)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <h3>功放参数</h3>
+                            <label for="amp_impedance">功放阻抗 (Ω):</label>
+                            <select id="amp_impedance">
+                                <option value="4">4Ω</option>
+                                <option value="6">6Ω</option>
+                                <option value="8" selected>8Ω</option>
+                            </select>
+                            
+                            <label for="amp_power">功放功率 (W):</label>
+                            <input type="number" id="amp_power" min="10" max="3000" step="1" value="80">
+                        </div>
+                    </div>
+
+                    <button id="calculate-btn" class="calculate-button">计算搭配方案</button>
+                </div>
+
+                <div class="results-section">
+                    <h2>计算结果</h2>
+                    <div id="results" class="results-content">
+                        <div class="result-item">
+                            <h3>预期最大声压级 (SPL):</h3>
+                            <p id="spl-result">-- dB</p>
+                        </div>
+                        <div class="result-item">
+                            <h3>功率匹配度:</h3>
+                            <p id="power-match-result">--</p>
+                        </div>
+                        <div class="result-item">
+                            <h3>阻抗匹配度:</h3>
+                            <p id="impedance-match-result">--</p>
+                        </div>
+                        <div class="result-item">
+                            <h3>房间适配度:</h3>
+                            <p id="room-match-result">--</p>
+                        </div>
+                        <div class="result-item full-width">
+                            <h3>综合评估:</h3>
+                            <p id="overall-result">请点击计算按钮获取结果</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="reference-chart">
+                <h2>参考图表</h2>
+                <div class="charts-container">
+                    <div class="chart">
+                        <h3>3米听音距离推荐功率</h3>
+                        <div class="chart-content" id="chart-3m"></div>
+                    </div>
+                    <div class="chart">
+                        <h3>3.5米听音距离推荐功率</h3>
+                        <div class="chart-content" id="chart-3_5m"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <h2>搭配指南</h2>
+                <div class="info-content">
+                    <p><strong>音箱灵敏度</strong>: 表示音箱在输入1W功率、距离1米处产生的声压级。灵敏度越高，相同功率下声音越大。</p>
+                    <p><strong>阻抗匹配</strong>: 功放的输出阻抗应与音箱的输入阻抗匹配或兼容，否则可能影响音质和设备安全。</p>
+                    <p><strong>功率匹配</strong>: 功放功率应在音箱的最小和最大功率之间，通常建议为音箱额定功率的1-2倍。</p>
+                    <p><strong>房间因素</strong>: 房间大小和吸音特性会影响实际听音效果，大房间需要更大功率的功放。</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 音箱功放搭配计算器 | 仅供参考，实际效果可能因环境和设备差异而有所不同</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+*/
+
+/* ===== CSS 样式 ===== */
+/* 全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 头部样式 */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 2.2rem;
+}
+
+header p {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+}
+
+/* 主内容样式 */
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* 计算器部分样式 */
+.calculator-section {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.input-form h2,
+.results-section h2,
+.reference-chart h2,
+.info-section h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+.form-row {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.form-group {
+    flex: 1;
+    min-width: 250px;
+}
+
+.form-group h3 {
+    color: #34495e;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.calculate-button {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 15px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.calculate-button:hover {
+    background-color: #2980b9;
+}
+
+/* 结果部分样式 */
+.results-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.result-item {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 5px;
+    border-left: 4px solid #3498db;
+}
+
+.result-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.result-item h3 {
+    color: #34495e;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.result-item p {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* 图表部分样式 */
+.reference-chart {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.charts-container {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.chart {
+    flex: 1;
+    min-width: 300px;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.chart h3 {
+    color: #34495e;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.chart-content {
+    font-family: monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* ===== JavaScript 脚本 ===== */
+/*
+// DOM 元素引用
+let calculateBtn, splResult, powerMatchResult, impedanceMatchResult, roomMatchResult, overallResult, chart3m, chart3_5m, visitorCount;
+
+// 应用配置
+const appConfig = {
+    // 使用CountAPI进行简单的访问统计
+    countApi: {
+        namespace: 'speaker-amp-calculator',
+        key: 'visits'
+    }
+};
+
+// 初始化DOM引用
+function initDOM() {
+    calculateBtn = document.getElementById('calculate-btn');
+    splResult = document.getElementById('spl-result');
+    powerMatchResult = document.getElementById('power-match-result');
+    impedanceMatchResult = document.getElementById('impedance-match-result');
+    roomMatchResult = document.getElementById('room-match-result');
+    overallResult = document.getElementById('overall-result');
+    chart3m = document.getElementById('chart-3m');
+    chart3_5m = document.getElementById('chart-3_5m');
+    
+    // 创建访问统计元素
+    if (!document.getElementById('visitor-count')) {
+        const footer = document.querySelector('footer');
+        visitorCount = document.createElement('p');
+        visitorCount.id = 'visitor-count';
+        visitorCount.className = 'visitor-count';
+        footer.appendChild(visitorCount);
+    } else {
+        visitorCount = document.getElementById('visitor-count');
+    }
+}
+
+// 获取用户输入
+function getInputs() {
+    const sensitivity = parseFloat(document.getElementById('sensitivity').value);
+    const speakerImpedance = parseInt(document.getElementById('impedance').value);
+    const speakerMinPower = parseFloat(document.getElementById('speaker_min_power').value);
+    const speakerMaxPower = parseFloat(document.getElementById('speaker_max_power').value);
+    const distance = parseFloat(document.getElementById('distance').value);
+    const roomSize = parseFloat(document.getElementById('room_size').value);
+    const roomType = document.getElementById('room_type').value;
+    const ampImpedance = parseInt(document.getElementById('amp_impedance').value);
+    const ampPower = parseFloat(document.getElementById('amp_power').value);
+    
+    // 验证输入
+    if (isNaN(sensitivity) || isNaN(speakerImpedance) || isNaN(speakerMinPower) || 
+        isNaN(speakerMaxPower) || isNaN(distance) || isNaN(roomSize) || 
+        isNaN(ampImpedance) || isNaN(ampPower)) {
+        throw new Error('请输入有效的数值');
+    }
+    
+    if (speakerMinPower >= speakerMaxPower) {
+        throw new Error('音箱最小功率应小于最大功率');
+    }
+    
+    if (distance <= 0 || roomSize <= 0 || ampPower <= 0) {
+        throw new Error('距离、房间大小和功率必须为正数');
+    }
+    
+    return {
+        sensitivity,
+        speakerImpedance,
+        speakerMinPower,
+        speakerMaxPower,
+        distance,
+        roomSize,
+        roomType,
+        ampImpedance,
+        ampPower
+    };
+}
+
+// 计算声压级 (SPL)
+function calculateSPL(sensitivity, ampPower, distance) {
+    // SPL = 灵敏度 + 10*log10(功放功率) - 20*log10(距离)
+    return sensitivity + 10 * Math.log10(ampPower) - 20 * Math.log10(distance);
+}
+
+// 计算功率匹配度
+function calculatePowerMatch(ampPower, speakerMinPower, speakerMaxPower) {
+    if (ampPower < speakerMinPower) {
+        return {
+            match: '低',
+            text: '功放功率低于音箱最小推荐功率，可能无法推动音箱达到最佳效果'
+        };
+    } else if (ampPower > speakerMaxPower * 2) {
+        return {
+            match: '过高',
+            text: '功放功率远高于音箱最大功率，可能有损坏音箱的风险'
+        };
+    } else if (ampPower > speakerMaxPower) {
+        return {
+            match: '较高',
+            text: '功放功率略高于音箱最大功率，使用时需注意音量控制'
+        };
+    } else {
+        return {
+            match: '良好',
+            text: '功放功率在音箱推荐范围内，匹配度良好'
+        };
+    }
+}
+
+// 计算阻抗匹配度
+function calculateImpedanceMatch(ampImpedance, speakerImpedance) {
+    if (ampImpedance < speakerImpedance) {
+        return {
+            match: '不匹配',
+            text: '功放阻抗低于音箱阻抗，可能导致功放过载'
+        };
+    } else if (ampImpedance === speakerImpedance) {
+        return {
+            match: '最佳匹配',
+            text: '功放阻抗与音箱阻抗完全匹配，效果最佳'
+        };
+    } else if (ampImpedance === speakerImpedance * 2) {
+        return {
+            match: '可用',
+            text: '功放阻抗是音箱的两倍，属于安全范围，但功率会减半'
+        };
+    } else {
+        return {
+            match: '基本匹配',
+            text: '阻抗差异在可接受范围内，可以使用'
+        };
+    }
+}
+
+// 计算房间适配度
+function calculateRoomMatch(ampPower, roomSize, distance) {
+    // 计算所需功率基准值 (基于房间大小和距离)
+    const requiredPowerBase = roomSize * 2; // 每平米约需2W作为基准
+    const requiredPower = requiredPowerBase * (distance / 3); // 根据距离调整
+    
+    if (ampPower < requiredPower * 0.7) {
+        return {
+            match: '不足',
+            text: '功放功率可能无法满足房间需求，音量可能不够'
+        };
+    } else if (ampPower > requiredPower * 2) {
+        return {
+            match: '过大',
+            text: '功放功率对于房间来说过大，可能需要降低音量使用'
+        };
+    } else {
+        return {
+            match: '合适',
+            text: '功放功率与房间大小匹配，预期效果良好'
+        };
+    }
+}
+    
+// 计算综合评估
+function calculateOverallScore(powerMatchResult, impedanceMatchResult, roomMatchResult) {
+    let overallScore = 0;
+    
+    // 功率匹配评分
+    if (powerMatchResult.match === '良好') overallScore += 3;
+    else if (powerMatchResult.match === '较高') overallScore += 2;
+    else if (powerMatchResult.match === '低') overallScore += 1;
+    
+    // 阻抗匹配评分
+    if (impedanceMatchResult.match === '最佳匹配') overallScore += 3;
+    else if (impedanceMatchResult.match === '可用' || impedanceMatchResult.match === '基本匹配') overallScore += 2;
+    else overallScore += 1;
+    
+    // 房间适配度评分
+    if (roomMatchResult.match === '合适') overallScore += 3;
+    else if (roomMatchResult.match === '过大') overallScore += 2;
+    else overallScore += 1;
+    
+    // 确定综合评分
+    if (overallScore >= 8) {
+        return '非常好的搭配';
+    } else if (overallScore >= 6) {
+        return '良好的搭配';
+    } else if (overallScore >= 4) {
+        return '可以接受的搭配';
+    } else {
+        return '需要调整的搭配';
+    }
+}
+    
+// 显示结果
+function displayResults(spl, powerMatchResult, impedanceMatchResult, roomMatchResult, overallRating, distance, roomSize) {
+    splResult.textContent = spl.toFixed(1) + ' dB';
+    powerMatchResult.innerHTML = powerMatchResult.match + '<br><small>' + powerMatchResult.text + '</small>';
+    impedanceMatchResult.innerHTML = impedanceMatchResult.match + '<br><small>' + impedanceMatchResult.text + '</small>';
+    roomMatchResult.innerHTML = roomMatchResult.match + '<br><small>' + roomMatchResult.text + '</small>';
+    overallResult.textContent = `${overallRating}。预期最大声压级为${spl.toFixed(1)}dB，在${distance}米距离处，适合${roomSize}㎡的房间使用。`;
+}
+
+// 主计算函数
+function calculate() {
+    try {
+        // 获取用户输入
+        const inputs = getInputs();
+        
+        // 计算各项指标
+        const spl = calculateSPL(inputs.sensitivity, inputs.ampPower, inputs.distance);
+        const powerMatchResult = calculatePowerMatch(inputs.ampPower, inputs.speakerMinPower, inputs.speakerMaxPower);
+        const impedanceMatchResult = calculateImpedanceMatch(inputs.ampImpedance, inputs.speakerImpedance);
+        const roomMatchResult = calculateRoomMatch(inputs.ampPower, inputs.roomSize, inputs.distance);
+        const overallRating = calculateOverallScore(powerMatchResult, impedanceMatchResult, roomMatchResult);
+        
+        // 显示结果
+        displayResults(spl, powerMatchResult, impedanceMatchResult, roomMatchResult, overallRating, inputs.distance, inputs.roomSize);
+        
+        // 记录计算次数（网络版功能）
+        if (typeof countapi !== 'undefined') {
+            countapi.increment({ namespace: appConfig.countApi.namespace, key: 'calculations' });
+        }
+        
+    } catch (error) {
+        // 显示错误信息
+        overallResult.textContent = '计算错误: ' + error.message;
+        overallResult.style.color = 'red';
+        
+        // 3秒后恢复默认样式
+        setTimeout(() => {
+            overallResult.style.color = '';
+        }, 3000);
+    }
+}
+
+// 生成参考图表
+function generateCharts() {
+    // 3米听音距离图表数据
+    const chart3mData = `┌────────────────────────────────────────────────────────────┐
+│                     3米听音距离                             │
+├───────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┤
+│       │ 84dB │ 85dB │ 86dB │ 87dB │ 88dB │ 89dB │ 90dB │ 91dB │
+├───────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┤
+│ 85dB  │ 11W  │ 9W   │ 7W   │ 6W   │ 4.5W │ 3.5W │ 3W   │ 2.2W │
+├───────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┤
+│ 95dB  │ 110W │ 90W  │ 70W  │ 60W  │ 45W  │ 35W  │ 30W  │ 22W  │
+├───────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┤
+│ 105dB │1100W │900W  │700W  │600W  │450W  │350W  │300W  │220W  │
+└───────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┘`;
+    
+    // 3.5米听音距离图表数据
+    const chart3_5mData = `┌────────────────────────────────────────────────────────────┐
+│                     3.5米听音距离                            │
+├───────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┤
+│       │ 84dB │ 85dB │ 86dB │ 87dB │ 88dB │ 89dB │ 90dB │ 91dB │
+├───────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┤
+│ 85dB  │ 16W  │ 13W  │ 10W  │ 8W   │ 6.3W │ 5W   │ 4W   │ 3.2W │
+├───────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┤
+│ 95dB  │ 160W │ 130W │ 100W │ 80W  │ 63W  │ 50W  │ 40W  │ 32W  │
+├───────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┤
+│ 105dB │1600W │1300W │1000W │800W  │630W  │500W  │400W  │320W  │
+└───────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┘`;
+    
+    // 设置图表内容
+    chart3m.textContent = chart3mData;
+    chart3_5m.textContent = chart3_5mData;
+}
+
+// 加载访问统计
+function loadVisitorCount() {
+    if (typeof countapi !== 'undefined') {
+        // 获取访问次数
+        countapi.get({ namespace: appConfig.countApi.namespace, key: appConfig.countApi.key }).then(result => {
+            visitorCount.textContent = `访问次数: ${result.value}`;
+        }).catch(() => {
+            visitorCount.textContent = '访问次数统计暂时不可用';
+        });
+        
+        // 增加访问次数
+        countapi.increment({ namespace: appConfig.countApi.namespace, key: appConfig.countApi.key });
+    } else {
+        // 统计功能不可用时显示的信息
+        visitorCount.textContent = '统计功能仅在网络版可用';
+    }
+}
+
+// 设置事件监听器
+function setupEventListeners() {
+    // 计算按钮点击事件
+    calculateBtn.addEventListener('click', calculate);
+    
+    // 监听输入变化，自动更新结果
+    const inputElements = document.querySelectorAll('input, select');
+    inputElements.forEach(element => {
+        element.addEventListener('change', calculate);
+    });
+}
+
+// 页面加载时初始化
+function initApp() {
+    // 初始化DOM引用
+    initDOM();
+    
+    // 生成参考图表
+    generateCharts();
+    
+    // 设置事件监听器
+    setupEventListeners();
+    
+    // 加载访问统计
+    loadVisitorCount();
+    
+    // 默认计算一次
+    calculate();
+}
+
+// 等待DOM加载完成后初始化应用
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    // DOM已经加载完成
+    initApp();
+}
+*/
